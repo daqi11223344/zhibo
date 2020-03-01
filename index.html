@@ -1,1 +1,82 @@
-1234565434565
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.js"></script>
+    <title>聊天室</title>
+</head>
+
+<body>
+<div style="width: 600px; height: 300px; border: 1px solid black;overflow-y: auto" id="list"></div>
+<input type="text" id="message">
+<input type="button" value="发送" id="fa">
+<img src="./bq.jpg" alt="添加表情" style="width: 30px; height: 30px; margin-top: 15px" id="bq">
+<div id="bqlist" style="width: 70%; height: auto"></div>
+</body>
+
+<script>
+    var username = prompt('请输入用户名');
+    var ws = new WebSocket("ws://:9502");
+    ws.onopen = function() {
+        var message = '{"type":"login","con":"' + username + '"}';
+        ws.send(message);
+    }
+    ws.onmessage = function(res) {
+        var data = JSON.parse(res.data);
+        console.log(data);
+        if (data.is_me == 1 && data.type=='login') {
+            var con = "<p style='text-align:center'>尊敬的用户：" + data.username + "欢迎光临</p>";
+        } else if (data.is_me == 0 && data.type=='login') {
+            var con = "<p style='text-align:center'><span style='color: red'>系统提示：</span>你的好友" + data.username + "上线啦！</p>";
+
+        }else if(data.is_me == 1&& data.type=='message'){
+            var con = "<div align='right'><p style='margin-left: 20px;'>❤您的消息❤</p><p style='border:1px solid #ff0000;margin-right: 20px;width: 40%;height: auto;border-radius: inherit;background-color:#f1b0b7;'>"+data.message+"</p></div>";
+        }else if(data.is_me == 0 && data.type=='message'){
+            var con = "<div align='left'><p style='margin-left: 20px;'>❤来自用户"+data.username+"的消息❤</p><p style='border:1px solid #ff0000;margin-right: 20px;width: 40%;height: auto;border-radius: inherit;background-color:#f1b0b7;'>"+data.message+"</p></div>";
+
+        }else if(data.is_me == 0 && data.type=='loginout'){
+            var con = "<p style='text-align:center'><span style='color: #0f6674'>系统提示：</span>你的好友" + data.username + "下线啦！</p>";
+        }
+        console.log(con);
+        $("#list").append(con);
+    }
+    $(document).on("click","#fa",function(){
+        var con = $("#message").val();
+        var message = '{"type":"message","con":"' +con+ '"}';
+        ws.send(message);
+    })
+
+    $(document).on("click","#bq",function(){
+        $.ajax({
+            url:'./bq.php',
+            dataType:'json',
+            success:function(res){
+                // console.log(res);
+            //    如果返回值是纯黑色字体，是字符串
+            //    var data = eval("("+res+")");     使用这个函数进行转换
+                var img = '';
+                for(var i in res){
+                    // console.log(res[i]);
+                    img +="<img class='bqimg' src='./bq/"+res[i]+"' style='width: 50px;height: 50px;'>";
+                }
+
+                // console.log(img);
+                $("#bqlist").html(img);
+            }
+
+        })
+    })
+
+    $(document).on('click',".bqimg",function(){
+        var src = $(this).attr("src");
+        var con = "<img src='"+src+"'>";
+        // console.log(con);
+        var message = '{"type":"message","con":"'+con+'"}';
+        ws.send(message);
+    })
+</script>
+
+</html>
