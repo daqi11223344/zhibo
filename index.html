@@ -19,7 +19,7 @@
 
 <script>
     var username = prompt('请输入用户名');
-    var ws = new WebSocket("ws://:9502");
+    var ws = new WebSocket("ws://116.62.160.207:9502");
     ws.onopen = function() {
         var message = '{"type":"login","con":"' + username + '"}';
         ws.send(message);
